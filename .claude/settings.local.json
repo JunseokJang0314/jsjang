@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__e75ba998-1162-4427-b209-5b7d9631faaf__getJiraIssueTypeMetaWithFields",
+      "Bash(claude mcp *)",
+      "Read(//Users/junseok/.claude/**)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('mcpServers', {}\\), indent=2\\)\\)\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(ssh -o ConnectTimeout=10 -o BatchMode=yes junseok@172.30.1.93 \"echo 'connected' && uname -a\")",
+      "Bash(ssh -o ConnectTimeout=10 -o BatchMode=yes -p 22 junseok@172.30.1.93 \"echo 'connected' && uname -a\")",
+      "Bash(nc -zv 172.30.1.93 22)"
+    ]
+  }
+}
