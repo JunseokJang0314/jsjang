@@ -12,15 +12,18 @@ HOLD_MIN_ODD = 10
 HOLD_MAX_ODD = 10
 HOLD_MIN_EVEN = 3
 HOLD_MAX_EVEN = 3
+HOLD_C = 10
+HOLD_D_MIN = 30
+HOLD_D_MAX = 40
 
 
 def press_key(key, hold=None):
     if hold is None:
-        hold = random.uniform(0.08, 0.22)
+        hold = 0.15
     pyautogui.keyDown(key)
     time.sleep(hold)
     pyautogui.keyUp(key)
-    time.sleep(random.uniform(0.1, 0.3))
+    time.sleep(random.uniform(0.2, 0.3))
 
 
 class ShiftHolderApp(rumps.App):
@@ -28,14 +31,16 @@ class ShiftHolderApp(rumps.App):
         super().__init__("⇧", quit_button=None)
         self.running = False
         self.thread = None
-        self.reverse = False  # False: 좌/우우좌, True: 우/좌좌우
+        self.mode = 'a'  # 'a': 좌10/우3, 'b': 우10/좌3, 'c': 좌10/우10
 
         self.toggle_item = rumps.MenuItem("▶ 시작", callback=self.toggle)
         self.status_item = rumps.MenuItem("대기 중...", callback=None)
         self.status_item.set_callback(None)
 
-        self.pattern_a = rumps.MenuItem("패턴 A: 홀수=좌 / 짝수=우  [1]", callback=self.set_pattern_a)
-        self.pattern_b = rumps.MenuItem("패턴 B: 홀수=우 / 짝수=좌  [2]", callback=self.set_pattern_b)
+        self.pattern_a = rumps.MenuItem("패턴 A: 좌10s / 우3s  [1]", callback=self.set_pattern_a)
+        self.pattern_b = rumps.MenuItem("패턴 B: 우10s / 좌3s  [2]", callback=self.set_pattern_b)
+        self.pattern_c = rumps.MenuItem("패턴 C: 좌10s / 우10s  [3]", callback=self.set_pattern_c)
+        self.pattern_d = rumps.MenuItem("패턴 D: Shift30~40s → 좌+우  [4]", callback=self.set_pattern_d)
         self.pattern_a.state = True
 
         quit_item = rumps.MenuItem("종료", callback=self.quit_app)
@@ -46,8 +51,10 @@ class ShiftHolderApp(rumps.App):
             None,
             self.pattern_a,
             self.pattern_b,
+            self.pattern_c,
+            self.pattern_d,
             None,
-            rumps.MenuItem("단축키: 1=패턴A  2=패턴B  3=정지", callback=None),
+            rumps.MenuItem("단축키: 1=A  2=B  3=C  4=D  5=정지", callback=None),
             None,
             quit_item,
         ]
@@ -70,6 +77,12 @@ class ShiftHolderApp(rumps.App):
             self.set_pattern_b(None)
             self._switch_pattern()
         elif ch == '3':
+            self.set_pattern_c(None)
+            self._switch_pattern()
+        elif ch == '4':
+            self.set_pattern_d(None)
+            self._switch_pattern()
+        elif ch == '5':
             if self.running:
                 self.stop()
 
@@ -81,14 +94,32 @@ class ShiftHolderApp(rumps.App):
         self.start()
 
     def set_pattern_a(self, _):
-        self.reverse = False
+        self.mode = 'a'
         self.pattern_a.state = True
         self.pattern_b.state = False
+        self.pattern_c.state = False
+        self.pattern_d.state = False
 
     def set_pattern_b(self, _):
-        self.reverse = True
+        self.mode = 'b'
         self.pattern_a.state = False
         self.pattern_b.state = True
+        self.pattern_c.state = False
+        self.pattern_d.state = False
+
+    def set_pattern_c(self, _):
+        self.mode = 'c'
+        self.pattern_a.state = False
+        self.pattern_b.state = False
+        self.pattern_c.state = True
+        self.pattern_d.state = False
+
+    def set_pattern_d(self, _):
+        self.mode = 'd'
+        self.pattern_a.state = False
+        self.pattern_b.state = False
+        self.pattern_c.state = False
+        self.pattern_d.state = True
 
     def toggle(self, _):
         if self.running:
@@ -115,10 +146,15 @@ class ShiftHolderApp(rumps.App):
         round_num = 1
         while self.running:
             # 1. Shift 홀드 + 카운트다운
-            if round_num % 2 == 1:
+            if self.mode == 'c':
+                hold_seconds = HOLD_C
+            elif self.mode == 'd':
+                hold_seconds = random.randint(HOLD_D_MIN, HOLD_D_MAX)
+            elif round_num % 2 == 1:
                 hold_seconds = random.randint(HOLD_MIN_ODD, HOLD_MAX_ODD)
             else:
                 hold_seconds = random.randint(HOLD_MIN_EVEN, HOLD_MAX_EVEN)
+
             start = time.time()
             while self.running:
                 elapsed = time.time() - start
@@ -143,8 +179,28 @@ class ShiftHolderApp(rumps.App):
             self._stop_event.wait(random.uniform(0.2, 0.5))
 
             # 3. 패턴에 따라 방향키 입력
-            if not self.reverse:
-                # 패턴 A: 홀수=좌 / 짝수=우
+            if self.mode == 'a':
+                # 홀수=좌 / 짝수=우
+                if round_num % 2 == 1:
+                    self.title = "←"
+                    self.status_item.title = f"← 입력 중 ({round_num}회차)"
+                    press_key("left")
+                else:
+                    self.title = "→"
+                    self.status_item.title = f"→ 입력 중 ({round_num}회차)"
+                    press_key("right")
+            elif self.mode == 'b':
+                # 홀수=우 / 짝수=좌
+                if round_num % 2 == 1:
+                    self.title = "→"
+                    self.status_item.title = f"→ 입력 중 ({round_num}회차)"
+                    press_key("right")
+                else:
+                    self.title = "←"
+                    self.status_item.title = f"← 입력 중 ({round_num}회차)"
+                    press_key("left")
+            elif self.mode == 'c':
+                # 패턴 C: 홀수=좌 / 짝수=우 (10초씩 동일)
                 if round_num % 2 == 1:
                     self.title = "←"
                     self.status_item.title = f"← 입력 중 ({round_num}회차)"
@@ -154,15 +210,19 @@ class ShiftHolderApp(rumps.App):
                     self.status_item.title = f"→ 입력 중 ({round_num}회차)"
                     press_key("right")
             else:
-                # 패턴 B: 홀수=우 / 짝수=좌
-                if round_num % 2 == 1:
-                    self.title = "→"
-                    self.status_item.title = f"→ 입력 중 ({round_num}회차)"
-                    press_key("right")
-                else:
+                # 패턴 D 1번: 좌(0.15s) → 우(0.01s)
+                if round_num % 3 == 1:
                     self.title = "←"
                     self.status_item.title = f"← 입력 중 ({round_num}회차)"
-                    press_key("left")
+                    press_key("left", hold=0.15)
+                    self.title = "→"
+                    self.status_item.title = f"→ 입력 중 ({round_num}회차)"
+                    press_key("right", hold=0.01)
+                # 패턴 D 2,3번: 우(0.06s)
+                else:
+                    self.title = "→"
+                    self.status_item.title = f"→ 입력 중 ({round_num}회차)"
+                    press_key("right", hold=0.06)
 
             round_num += 1
 
