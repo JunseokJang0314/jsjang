@@ -24,7 +24,14 @@
       "Bash(networksetup -getairportnetwork en0)",
       "Bash(/Applications/Tailscale.app/Contents/MacOS/Tailscale status *)",
       "Bash(tailscale status *)",
-      "Bash(ssh -o ConnectTimeout=15 junseok@100.123.187.22 'echo connected; hostname')"
+      "Bash(ssh -o ConnectTimeout=15 junseok@100.123.187.22 'echo connected; hostname')",
+      "Bash(ssh -o ConnectTimeout=15 junseok@14.32.244.245 'echo connected')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" --connect-timeout 8 http://14.32.244.245/)",
+      "Bash(ssh junseok@14.32.244.245 'echo \"=== nginx dir ===\"; ls -la ~/docker/nginx/; echo \"=== compose ===\"; cat ~/docker/nginx/docker-compose.yml 2>/dev/null || cat ~/docker/nginx/compose.yaml 2>/dev/null; echo \"=== conf ===\"; cat ~/docker/nginx/conf.d/default.conf; echo \"=== containers ===\"; docker ps --format \"{{.Names}} {{.Status}}\"')",
+      "Bash(ssh junseok@14.32.244.245 'echo \"=== nginx inspect: mounts & config ===\"; docker inspect nginx --format \"{{json .Mounts}}\" | python3 -m json.tool; echo \"=== compose label ===\"; docker inspect nginx --format \"{{ index .Config.Labels \\\\\"com.docker.compose.project.config_files\\\\\" }}\"')",
+      "Bash(ssh junseok@14.32.244.245 'echo \"=== project & workdir ===\"; docker inspect nginx --format \"proj={{ index .Config.Labels \\\\\"com.docker.compose.project\\\\\" }} workdir={{ index .Config.Labels \\\\\"com.docker.compose.project.working_dir\\\\\" }}\"; echo \"=== find compose files ===\"; find ~/docker -maxdepth 2 -iname \"*compose*.y*ml\" 2>/dev/null; echo \"=== docker dir tree ===\"; ls -la ~/docker/')",
+      "Bash(ssh junseok@14.32.244.245 'echo \"=== image ===\"; docker inspect nginx --format \"{{.Config.Image}}\"; echo \"=== ports ===\"; docker inspect nginx --format \"{{json .HostConfig.PortBindings}}\"; echo \"=== restart ===\"; docker inspect nginx --format \"{{.HostConfig.RestartPolicy.Name}}\"; echo \"=== networks ===\"; docker inspect nginx --format \"{{json .NetworkSettings.Networks}}\" | python3 -c \"import json,sys;print\\(list\\(json.load\\(sys.stdin\\).keys\\(\\)\\)\\)\"')",
+      "Bash(ssh junseok@14.32.244.245 *)"
     ]
   }
 }

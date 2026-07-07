@@ -15,6 +15,7 @@ HOLD_MAX_EVEN = 3
 HOLD_C = 10
 HOLD_D_MIN = 30
 HOLD_D_MAX = 40
+HOLD_E = 35
 
 
 def press_key(key, hold=None):
@@ -31,7 +32,7 @@ class ShiftHolderApp(rumps.App):
         super().__init__("⇧", quit_button=None)
         self.running = False
         self.thread = None
-        self.mode = 'a'  # 'a': 좌10/우3, 'b': 우10/좌3, 'c': 좌10/우10
+        self.mode = 'a'  # 'a': 좌10/우3, 'b': 우10/좌3, 'c': 좌10/우10, 'd': Shift30~40s→좌+우, 'e': Shift35s→좌
 
         self.toggle_item = rumps.MenuItem("▶ 시작", callback=self.toggle)
         self.status_item = rumps.MenuItem("대기 중...", callback=None)
@@ -41,6 +42,7 @@ class ShiftHolderApp(rumps.App):
         self.pattern_b = rumps.MenuItem("패턴 B: 우10s / 좌3s  [2]", callback=self.set_pattern_b)
         self.pattern_c = rumps.MenuItem("패턴 C: 좌10s / 우10s  [3]", callback=self.set_pattern_c)
         self.pattern_d = rumps.MenuItem("패턴 D: Shift30~40s → 좌+우  [4]", callback=self.set_pattern_d)
+        self.pattern_e = rumps.MenuItem("패턴 E: Shift35s → 좌  [5]", callback=self.set_pattern_e)
         self.pattern_a.state = True
 
         quit_item = rumps.MenuItem("종료", callback=self.quit_app)
@@ -53,8 +55,9 @@ class ShiftHolderApp(rumps.App):
             self.pattern_b,
             self.pattern_c,
             self.pattern_d,
+            self.pattern_e,
             None,
-            rumps.MenuItem("단축키: 1=A  2=B  3=C  4=D  5=정지", callback=None),
+            rumps.MenuItem("단축키: 1=A  2=B  3=C  4=D  5=E  6=정지", callback=None),
             None,
             quit_item,
         ]
@@ -83,6 +86,9 @@ class ShiftHolderApp(rumps.App):
             self.set_pattern_d(None)
             self._switch_pattern()
         elif ch == '5':
+            self.set_pattern_e(None)
+            self._switch_pattern()
+        elif ch == '6':
             if self.running:
                 self.stop()
 
@@ -99,6 +105,7 @@ class ShiftHolderApp(rumps.App):
         self.pattern_b.state = False
         self.pattern_c.state = False
         self.pattern_d.state = False
+        self.pattern_e.state = False
 
     def set_pattern_b(self, _):
         self.mode = 'b'
@@ -106,6 +113,7 @@ class ShiftHolderApp(rumps.App):
         self.pattern_b.state = True
         self.pattern_c.state = False
         self.pattern_d.state = False
+        self.pattern_e.state = False
 
     def set_pattern_c(self, _):
         self.mode = 'c'
@@ -113,6 +121,7 @@ class ShiftHolderApp(rumps.App):
         self.pattern_b.state = False
         self.pattern_c.state = True
         self.pattern_d.state = False
+        self.pattern_e.state = False
 
     def set_pattern_d(self, _):
         self.mode = 'd'
@@ -120,6 +129,15 @@ class ShiftHolderApp(rumps.App):
         self.pattern_b.state = False
         self.pattern_c.state = False
         self.pattern_d.state = True
+        self.pattern_e.state = False
+
+    def set_pattern_e(self, _):
+        self.mode = 'e'
+        self.pattern_a.state = False
+        self.pattern_b.state = False
+        self.pattern_c.state = False
+        self.pattern_d.state = False
+        self.pattern_e.state = True
 
     def toggle(self, _):
         if self.running:
@@ -150,6 +168,8 @@ class ShiftHolderApp(rumps.App):
                 hold_seconds = HOLD_C
             elif self.mode == 'd':
                 hold_seconds = random.randint(HOLD_D_MIN, HOLD_D_MAX)
+            elif self.mode == 'e':
+                hold_seconds = HOLD_E
             elif round_num % 2 == 1:
                 hold_seconds = random.randint(HOLD_MIN_ODD, HOLD_MAX_ODD)
             else:
