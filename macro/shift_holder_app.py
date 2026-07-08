@@ -229,6 +229,11 @@ class ShiftHolderApp(rumps.App):
                     self.title = "→"
                     self.status_item.title = f"→ 입력 중 ({round_num}회차)"
                     press_key("right")
+            elif self.mode == 'e':
+                # 패턴 E: 좌 1회
+                self.title = "←"
+                self.status_item.title = f"← 입력 중 ({round_num}회차)"
+                press_key("left")
             else:
                 # 패턴 D 1번: 좌(0.15s) → 우(0.01s)
                 if round_num % 3 == 1:
